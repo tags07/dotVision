@@ -19,9 +19,15 @@
         _currentFrame = 0;
         _yMin = _yMax = 0;
         _xMin = _xMax = 0;
+        _dots = [NSMutableArray arrayWithCapacity:1];
     }
     
     return self;
+}
+
+- (void)dealloc
+{
+    NSLog(@"Destroying DotLog instance...");
 }
 
 - (NSMutableArray *)getDots
@@ -41,7 +47,7 @@
 
 - (void)setCurrentFrame:(int)currentFrame
 {
-    if (currentFrame >= [_dots count])
+    if (currentFrame >= [_dots count] && [_dots count])
     {
         currentFrame %= [_dots count];
     }
@@ -103,52 +109,59 @@
         
         if ([tokens count] != 5)
         {
-            NSLog(@"Skipping invalid line %d", i);
+            NSLog(@"Skipping invalid line %d (%@) as it has %lu tokens", i, [lines objectAtIndex:i], [tokens count]);
             continue;
         }
         
-        float x = [[tokens objectAtIndex:1] floatValue];
-        float y = [[tokens objectAtIndex:2] floatValue];
-        
-        if (x < _xMin)
-        {
-            _xMin = x;
-        }
-
-        if (x > _xMax)
-        {
-            _xMax = x;
-        }
-        
-        if (y < _yMin)
-        {
-            _yMin = y;
-        }
-        
-        if (y > _yMax)
-        {
-            _yMax = y;
-        }        
-        
-        Dot *dot = [[Dot alloc] init];
         CGPoint p;
+        p.x = [[tokens objectAtIndex:1] floatValue];
+        p.y = [[tokens objectAtIndex:2] floatValue];
         
-        p.x = x;
-        p.y = y;
-        
-        unsigned int hex;
+        unsigned int hexCode;
         NSScanner *scanner = [NSScanner scannerWithString:[tokens objectAtIndex:3]];
-        [scanner scanHexInt:&hex];
-
-        [dot setPoint:p];
-        [dot setTimestamp:[[tokens objectAtIndex:0] floatValue]];
-        [dot setColour:hex];
-        [dot setWaypoint:([[tokens objectAtIndex:4] intValue]) ? YES : NO];
+        [scanner scanHexInt:&hexCode];
         
-        [_dots insertObject:dot atIndex:i];
+        BOOL  waypoint  = ([[tokens objectAtIndex:4] intValue]) ? YES : NO;
+        float timestamp = [[tokens objectAtIndex:0] floatValue];
+        
+        [self addDotWithPoint:p timestamp:timestamp colour:hexCode waypoint:waypoint atIndex:i];
     }
     
     [self setCurrentFrame:0];
+}
+
+- (void)addDotWithPoint:(CGPoint)dotPoint timestamp:(float)timestamp colour:(int)hexCode waypoint:(BOOL)waypoint atIndex:(int)index
+{
+    Dot *dot = [[Dot alloc] init];
+    
+    NSLog(@"Adding dot (%.2f, %.2f)", dotPoint.x, dotPoint.y);
+    
+    [dot setPoint:dotPoint];
+    [dot setTimestamp:timestamp];
+    [dot setColour:hexCode];
+    [dot setWaypoint:waypoint];
+
+    if (dotPoint.x < _xMin)
+    {
+        _xMin = dotPoint.x;
+    }
+    
+    if (dotPoint.x > _xMax)
+    {
+        _xMax = dotPoint.x;
+    }
+    
+    if (dotPoint.y < _yMin)
+    {
+        _yMin = dotPoint.y;
+    }
+    
+    if (dotPoint.y > _yMax)
+    {
+        _yMax = dotPoint.y;
+    }
+    
+    [_dots addObject:dot];
 }
 
 @end

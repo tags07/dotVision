@@ -32,5 +32,6 @@
 - (float)xMax;
 - (float)yMin;
 - (float)yMax;
+- (void)addDotWithPoint:(CGPoint)dotPoint timestamp:(float)timestamp colour:(int)hexCode waypoint:(BOOL)waypoint atIndex:(int)index;
 
 @end
