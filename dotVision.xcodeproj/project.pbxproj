@@ -19,6 +19,7 @@
 		600EBC2719FFA74E00253672 /* dotVisionTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 600EBC2619FFA74E00253672 /* dotVisionTests.m */; };
 		6047B47F1A05D2EB0059C073 /* DotLog.m in Sources */ = {isa = PBXBuildFile; fileRef = 6047B47E1A05D2EB0059C073 /* DotLog.m */; };
 		6047B4851A060A250059C073 /* Dot.m in Sources */ = {isa = PBXBuildFile; fileRef = 6047B4841A060A250059C073 /* Dot.m */; };
+		6099A2C21C0AAFE900D8A043 /* DotLogServer.m in Sources */ = {isa = PBXBuildFile; fileRef = 6099A2C11C0AAFE900D8A043 /* DotLogServer.m */; };
 		60AAFBCF1BC2811F006D1867 /* DotView.m in Sources */ = {isa = PBXBuildFile; fileRef = 60AAFBCE1BC2811F006D1867 /* DotView.m */; };
 /* End PBXBuildFile section */
 
@@ -56,6 +57,8 @@
 		6047B47E1A05D2EB0059C073 /* DotLog.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DotLog.m; sourceTree = "<group>"; };
 		6047B4831A060A250059C073 /* Dot.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Dot.h; sourceTree = "<group>"; };
 		6047B4841A060A250059C073 /* Dot.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Dot.m; sourceTree = "<group>"; };
+		6099A2C01C0AAFE900D8A043 /* DotLogServer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DotLogServer.h; sourceTree = "<group>"; };
+		6099A2C11C0AAFE900D8A043 /* DotLogServer.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DotLogServer.m; sourceTree = "<group>"; };
 		60AAFBCD1BC2811F006D1867 /* DotView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DotView.h; sourceTree = "<group>"; };
 		60AAFBCE1BC2811F006D1867 /* DotView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DotView.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -133,6 +136,8 @@
 				6047B47E1A05D2EB0059C073 /* DotLog.m */,
 				6047B4831A060A250059C073 /* Dot.h */,
 				6047B4841A060A250059C073 /* Dot.m */,
+				6099A2C01C0AAFE900D8A043 /* DotLogServer.h */,
+				6099A2C11C0AAFE900D8A043 /* DotLogServer.m */,
 			);
 			path = dotVision;
 			sourceTree = "<group>";
@@ -279,6 +284,7 @@
 				600EBC0919FFA74E00253672 /* main.m in Sources */,
 				600EBC1019FFA74E00253672 /* AppDelegate.m in Sources */,
 				60AAFBCF1BC2811F006D1867 /* DotView.m in Sources */,
+				6099A2C21C0AAFE900D8A043 /* DotLogServer.m in Sources */,
 				6047B47F1A05D2EB0059C073 /* DotLog.m in Sources */,
 				6047B4851A060A250059C073 /* Dot.m in Sources */,
 			);

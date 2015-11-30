@@ -15,8 +15,9 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
     // @todo: add support for multiple DotLog plots at the same time
-    _dotLog = [[DotLog alloc] init];
-	[_dotView setNeedsDisplay:YES];
+	[self.dotView setNeedsDisplay:YES];
+    
+    _dotLogServer = [[DotLogServer alloc] initWithDisplayController:self];
 }
 
 - (IBAction)play:(id)sender
@@ -26,14 +27,14 @@
      * after the first frame it took place.
      */
 
-    [_currentFrameCounter setStringValue:@"1"];
-    [_scrubber setIntValue:1];
+    [self.currentFrameCounter setStringValue:@"1"];
+    [self.scrubber setIntValue:1];
 
     [_dotLog setCurrentFrame:0];
-    [_dotView setDotLog:_dotLog];
-    [_dotView setNeedsDisplay:YES];   // this just adds it to the runloop, it does not synchronously display the new frame, so we can't increment the frame until after the timer
+    [self.dotView setDotLog:_dotLog];
+    [self.dotView setNeedsDisplay:YES];   // this just adds it to the runloop, it does not synchronously display the new frame, so we can't increment the frame until after the timer
     
-    if ([_realTimePlayBack state] == NSOnState)
+    if ([self.realTimePlayBack state] == NSOnState)
     {
         NSLog(@"Playing with real-time playback");
 
@@ -48,10 +49,11 @@
     {
         NSLog(@"Playing in one hit");
 
+        [self.dotView restoreSnapshot];
         [_dotLog setCurrentFrame:[[_dotLog getDots] count] - 1];
-        [_dotView setNeedsDisplay:YES];
-        [_currentFrameCounter setStringValue:[NSString stringWithFormat:@"%d", [[_dotLog getDots] count]]];
-        [_scrubber setIntValue:[[_dotLog getDots] count]];
+        [self.dotView setNeedsDisplay:YES];
+        [self.currentFrameCounter setStringValue:[NSString stringWithFormat:@"%lu", [[_dotLog getDots] count]]];
+        [self.scrubber setIntValue:[[_dotLog getDots] count]];
     }
 }
 
@@ -65,17 +67,17 @@
 
 - (void)drawFrame:(NSTimer*)timer
 {
-    if ([_realTimePlayBack state] == NSOffState)
+    if ([self.realTimePlayBack state] == NSOffState)
     {
         return;
     }
     
     // Draw the "current" frame
     [_dotLog setCurrentFrame:[_dotLog nextFrame]];
-    [_dotView setNeedsDisplay:YES];
+    [self.dotView setNeedsDisplay:YES];
 
-    [_currentFrameCounter setStringValue:[NSString stringWithFormat:@"%d", [_dotLog currentFrame] + 1]];
-    [_scrubber setIntValue:[_dotLog currentFrame] + 1];
+    [self.currentFrameCounter setStringValue:[NSString stringWithFormat:@"%d", [_dotLog currentFrame] + 1]];
+    [self.scrubber setIntValue:[_dotLog currentFrame] + 1];
 
     // Get the timestamp from the current Dot
     float currentTimestamp = [(Dot *)[[_dotLog getDots] objectAtIndex:[_dotLog currentFrame]] timestamp];
@@ -90,7 +92,7 @@
 
 - (IBAction)toggleRealTimePlayBack:(id)sender
 {
-    NSLog(@"Toggling real-time playback (%@)", ([_realTimePlayBack state] == NSOnState) ? @"yes" : @"no");
+    NSLog(@"Toggling real-time playback (%@)", ([self.realTimePlayBack state] == NSOnState) ? @"yes" : @"no");
 }
 
 - (IBAction)selectDotLog:(id)sender
@@ -106,19 +108,72 @@
         
         for (int i = 0; i < [files count]; i++)
         {
+            _dotLog = [[DotLog alloc] init];
+
             [_dotLog setLogFile:[[files objectAtIndex:i] path]];
             
-            [_dotView setYRange:[_dotLog yMin]-10 max:[_dotLog yMax]+10];
-            [_dotView setXRange:[_dotLog xMin]-10 max:[_dotLog xMax]+10];
+            [self.dotView setYRange:[_dotLog yMin]-10 max:[_dotLog yMax]+10];
+            [self.dotView setXRange:[_dotLog xMin]-10 max:[_dotLog xMax]+10];
             
-            [_currentFrameCounter setStringValue:@"0"];
-            [_totalFrameCounter setStringValue:[NSString stringWithFormat:@"%d", [[_dotLog getDots] count]]];
+            [self.currentFrameCounter setStringValue:@"0"];
+            [self.totalFrameCounter setStringValue:[NSString stringWithFormat:@"%lu", [[_dotLog getDots] count]]];
             
-            [_scrubber setMinValue:0];
-            [_scrubber setMaxValue:[[_dotLog getDots] count] - 1];
-            [_scrubber setIntValue:0];
+            [self.scrubber setMinValue:0];
+            [self.scrubber setMaxValue:[[_dotLog getDots] count] - 1];
+            [self.scrubber setIntValue:0];
+            
+            [self.scrubber setEnabled:YES];
+            [self.btnPlay setEnabled:YES];
+            
+            break;
         }
     }
+}
+
+- (IBAction)snapshot:(id)sender
+{
+    [self.dotView snapshot];
+}
+
+- (IBAction)startDotLogServer:(id)sender
+{
+    if ([_dotLogServer running])
+    {
+        [self.btnOpen setEnabled:YES];
+        [self.realTimePlayBack setEnabled:YES];
+        [self.btnServer setTitle:@"Start Server"];
+    }
+    else
+    {
+        _dotLog = [[DotLog alloc] init];
+
+        [self.btnOpen setEnabled:NO];
+        [self.btnPlay setEnabled:NO];
+        [self.realTimePlayBack setState:NSOffState];
+        [self.realTimePlayBack setEnabled:NO];
+        [self.scrubber setEnabled:NO];
+        [self.btnServer setTitle:@"Stop Server"];
+        
+        [self.currentFrameCounter setStringValue:@"0"];
+        [self.totalFrameCounter setStringValue:[NSString stringWithFormat:@"%d", 0]];
+
+        [_dotLogServer start];
+    }
+}
+
+#pragma mark DotLogDisplayController Protocol
+
+- (void)addDot:(CGPoint)dotPoint withTimestamp:(float)timestamp
+{
+    [_dotLog addDotWithPoint:dotPoint timestamp:timestamp colour:0 waypoint:NO atIndex:-1];
+
+    // Adding a dot recalculates the X & Y ranges of the dotLog, ensure the view is synchronised
+    [self.dotView setYRange:[_dotLog yMin]-10 max:[_dotLog yMax]+10];
+    [self.dotView setXRange:[_dotLog xMin]-10 max:[_dotLog xMax]+10];
+    
+    [self.totalFrameCounter setStringValue:[NSString stringWithFormat:@"%lu", [[_dotLog getDots] count]]];
+
+    [self play:self];
 }
 
 @end
