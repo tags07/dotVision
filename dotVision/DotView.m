@@ -18,6 +18,8 @@
     
     [self setYRange:-100 max:100];
     [self setXRange:-100 max:100];
+    
+    _snapshot = nil;
 }
 
 #pragma mark -
@@ -60,6 +62,7 @@
 - (void)drawRect:(NSRect)rect
 {
  	CGRect	rectBounds = [self bounds];     // our dimensions in the view's user space co-ordinates (not necessarily pixels)
+    BOOL    drawPoints = YES;
     
 	float yPixelsPerUnit = rectBounds.size.height / (_yMax - _yMin);
     float xPixelsPerUnit = rectBounds.size.width  / (_xMax - _xMin);
@@ -145,9 +148,18 @@
     }
    
     NSArray *dots = [[self dotLog] getDotsUpToCurrentFrame];
+    NSBezierPath *path = nil;
 
-    NSBezierPath *path = [NSBezierPath bezierPath];
-    [path setLineWidth:2];
+    if (drawPoints)
+    {
+        [[NSColor blackColor] setFill];
+        [xf concat];
+    }
+    else
+    {
+        NSBezierPath *path = [NSBezierPath bezierPath];
+        [path setLineWidth:2];
+    }
 
     BOOL    firstPointOfPath = YES, firstPointOfLog = YES;
     int     colour           = 0, lastColour = 0;
@@ -168,39 +180,67 @@
 
         NSLog(@"plotting robot space (%.2f,%.2f) %08x", p.x, p.y, colour);
         
-        /* If the colour changes on this point, close the old path and stroke in current
-         * colour before switching colour.
-         */
-        
-        if (colour != lastColour)
+        if (drawPoints)
         {
-            NSBezierPath *xfPath = [xf transformBezierPath:path];
-            [xfPath stroke];
-         
-            path = [NSBezierPath bezierPath];
-            [path setLineWidth:2];
-
-            firstPointOfPath = YES;
-        }
-
-        if (firstPointOfPath)
-        {
-            if ( ! firstPointOfLog)
-            {
-                // Don't leave a gap from the last point
-                [path moveToPoint:previousPoint];
-                [path lineToPoint:p];
-            }
-            else
-            {
-                [path moveToPoint:p];
-            }
-
-            firstPointOfPath = NO;
+            /**
+             * @todo: colour support
+             */
+            NSRect rect;
+            NSSize size;
+            
+            size.height = 2;
+            size.width  = 2;
+            
+            rect.origin = p;
+            rect.size = size;
+            
+            NSRectFill(rect);
         }
         else
         {
-            [path lineToPoint:p];
+            /* If the colour changes on this point, close the old path and stroke in current
+             * colour before switching colour.
+             */
+            
+            if (colour != lastColour)
+            {
+                NSBezierPath *xfPath = [xf transformBezierPath:path];
+                [xfPath stroke];
+                
+                path = [NSBezierPath bezierPath];
+                [path setLineWidth:2];
+                
+                firstPointOfPath = YES;
+            }
+            
+            NSRect rect;
+            NSSize size;
+            
+            size.height = 2;
+            size.width  = 2;
+            
+            rect.origin = p;
+            rect.size = size;
+            
+            if (firstPointOfPath)
+            {
+                if ( ! firstPointOfLog)
+                {
+                    // Don't leave a gap from the last point
+                    [path moveToPoint:previousPoint];
+                    [path lineToPoint:p];
+                }
+                else
+                {
+                    [path moveToPoint:p];
+                }
+                
+                firstPointOfPath = NO;
+            }
+            else
+            {
+                [path lineToPoint:p];
+            }
         }
         
         if (colour != lastColour)
@@ -242,6 +282,33 @@
     // Close out the path
     NSBezierPath *xfPath = [xf transformBezierPath:path];
     [xfPath stroke];
+
+    if (_snapshot)
+    {
+        NSLog(@"Restoring saved snapshot");
+        [_snapshot drawAtPoint:NSZeroPoint fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:0.5];
+    }
+}
+
+/**
+ * Save a snapshot of the current view contents.
+ */
+- (void)snapshot
+{
+    NSLog(@"Saving view snapshot");
+    _snapshot = [[NSImage alloc] initWithData:[self dataWithEPSInsideRect:[self bounds]]];
+}
+
+/**
+ * Restore a snapshot
+ */
+- (void)restoreSnapshot
+{
+    if (_snapshot)
+    {
+        NSLog(@"Restoring saved snapshot");
+        [_snapshot drawAtPoint:NSZeroPoint fromRect:NSZeroRect operation:NSCompositeSourceOver fraction:1];
+    }
 }
 
 @end

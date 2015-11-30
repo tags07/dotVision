@@ -10,12 +10,15 @@
 @class DotLog;
 
 @interface DotView : NSView {
-    float _yMin, _yMax;
-    float _xMin, _xMax;
+    float       _yMin, _yMax;
+    float       _xMin, _xMax;
+    NSImage *   _snapshot;
 }
 
 - (void)setYRange:(float)min max:(float)max;
 - (void)setXRange:(float)min max:(float)max;
+- (void)snapshot;
+- (void)restoreSnapshot;
 
 @property (weak) DotLog *dotLog;
 @property (assign) int gridLineCountY;
